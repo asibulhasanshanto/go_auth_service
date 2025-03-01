@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/asibulhasanshanto/go_api/internal/api"
+	"github.com/asibulhasanshanto/go_api/internal/config"
+	"github.com/asibulhasanshanto/go_api/internal/conn"
 	"github.com/asibulhasanshanto/go_api/pkg"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -15,6 +17,10 @@ func main(){
 	fx.New(
 		fx.Provide(
 			pkg.CustomLogger,
+			config.LoadConfig,
+
+			conn.ConnectPostgres,
+
 			GinHttpServer,
 			api.SetupRoutes,
 		),

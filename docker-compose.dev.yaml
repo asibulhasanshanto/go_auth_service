@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: basic_api_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: basic_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:
+  
