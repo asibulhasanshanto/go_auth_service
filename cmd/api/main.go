@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"github.com/asibulhasanshanto/go_api/internal/api"
+	"github.com/asibulhasanshanto/go_api/internal/api/handlers"
 	"github.com/asibulhasanshanto/go_api/internal/config"
 	"github.com/asibulhasanshanto/go_api/internal/conn"
+	"github.com/asibulhasanshanto/go_api/internal/core"
 	"github.com/asibulhasanshanto/go_api/pkg"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -20,6 +22,12 @@ func main(){
 			config.LoadConfig,
 
 			conn.ConnectPostgres,
+
+			// handlers
+			handlers.NewAuthHandler,
+
+			// cores
+			core.NewAuth,
 
 			GinHttpServer,
 			api.SetupRoutes,
