@@ -1,10 +1,11 @@
-package core
+package tests
 
 import (
 	"testing"
 	"time"
 
 	"github.com/asibulhasanshanto/go_api/internal/config"
+	"github.com/asibulhasanshanto/go_api/internal/core"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -27,7 +28,7 @@ func TestGenerateToken(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 
 	// Create a new Token instance with mock config and logger
-	token := NewToken(MockConfig(), logger)
+	token := core.NewToken(MockConfig(), logger)
 
 	// Define a payload for the token
 	payload := map[string]interface{}{
@@ -76,8 +77,6 @@ func TestGenerateToken(t *testing.T) {
 	// Validate the expiration time of the refresh token
 	refreshTokenExp := int64(refreshTokenClaims["exp"].(float64))
 	assert.True(t, refreshTokenExp > time.Now().Unix(), "Refresh token should not be expired")
-
-
 
 	// testing the ValidateToken function
 	//===================================================================================================
