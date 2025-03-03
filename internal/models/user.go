@@ -22,3 +22,9 @@ type Token struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
 	DeletedAt time.Time `gorm:"column:deleted_at;index"`
 }
+
+type UserCreateRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+	Name     string `json:"name" validate:"required,min=3,max=100"`
+}
