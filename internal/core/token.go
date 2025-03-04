@@ -16,50 +16,50 @@ type Token struct {
 func NewToken(
 	cfg *config.Config,
 	log *zap.Logger,
-	) *Token {
+) *Token {
 	return &Token{
 		cfg: cfg,
-		log: log,	
+		log: log,
 	}
 }
 
 func (t *Token) GenerateToken(payload map[string]interface{}) ([]string, error) {
-	accessTokenSecret := t.cfg.App.AccessTokenSecret
+	accessTokenSecret := []byte(t.cfg.App.AccessTokenSecret)
 	accessTokenDuration := t.cfg.App.AccessTokenDuration
-	refreshTokenSecret := t.cfg.App.RefreshTokenSecret
+	refreshTokenSecret := []byte(t.cfg.App.RefreshTokenSecret)
 	refreshTokenDuration := t.cfg.App.RefreshTokenDuration
 
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, 
-		jwt.MapClaims{ 
-		"data": payload,
-		"exp": time.Now().Add(time.Duration(accessTokenDuration) * time.Hour).Unix(), 
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"data": payload,
+			"exp":  time.Now().Add(time.Duration(accessTokenDuration) * time.Hour).Unix(),
 		})
 
-		signedAccessToken, err := accessToken.SignedString(accessTokenSecret)
-		if err != nil {
-			return []string{}, err
-		}
+	signedAccessToken, err := accessToken.SignedString(accessTokenSecret)
+	if err != nil {
+		return []string{}, err
+	}
 
-   refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
-   jwt.MapClaims{
-   "data": payload,
-   "exp": time.Now().Add(time.Duration(refreshTokenDuration) * time.Hour).Unix(),
-   })
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256,
+		jwt.MapClaims{
+			"data": payload,
+			"exp":  time.Now().Add(time.Duration(refreshTokenDuration) * time.Hour).Unix(),
+		})
 
-   signedRefreshToken, err := refreshToken.SignedString(refreshTokenSecret)
-   if err != nil {
-	   return []string{}, err
-   }
+	signedRefreshToken, err := refreshToken.SignedString(refreshTokenSecret)
+	if err != nil {
+		return []string{}, err
+	}
 
-   return []string{signedAccessToken, signedRefreshToken}, nil
+	return []string{signedAccessToken, signedRefreshToken}, nil
 }
 
 func (t *Token) ValidateToken(tokenString string, tokenType string) (map[string]interface{}, error) {
 	var secret []byte
 	if tokenType == "access" {
-		secret = t.cfg.App.AccessTokenSecret
+		secret = []byte(t.cfg.App.AccessTokenSecret)
 	} else if tokenType == "refresh" {
-		secret = t.cfg.App.RefreshTokenSecret
+		secret = []byte(t.cfg.App.RefreshTokenSecret)
 	} else {
 		return map[string]interface{}{}, nil
 	}

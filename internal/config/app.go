@@ -1,9 +1,9 @@
 package config
 
 type AppConfig struct {
-	Port string
-	AccessTokenSecret []byte
-	RefreshTokenSecret []byte
-	AccessTokenDuration int
+	Port                 string
+	AccessTokenSecret    string // Changed from []byte to string
+	RefreshTokenSecret   string // Changed from []byte to string
+	AccessTokenDuration  int
 	RefreshTokenDuration int
 }

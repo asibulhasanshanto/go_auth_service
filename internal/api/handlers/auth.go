@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/asibulhasanshanto/go_api/internal/core"
 	"github.com/asibulhasanshanto/go_api/internal/models"
 	"github.com/asibulhasanshanto/go_api/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -12,11 +13,12 @@ import (
 )
 
 type AuthHandler struct {
-	log *zap.Logger
+	log  *zap.Logger
+	auth *core.Auth
 }
 
-func NewAuthHandler(log *zap.Logger) *AuthHandler {
-	return &AuthHandler{log: log}
+func NewAuthHandler(log *zap.Logger, auth *core.Auth) *AuthHandler {
+	return &AuthHandler{log: log, auth: auth}
 }
 
 func (ah *AuthHandler) Signup(ctx *gin.Context) {
@@ -41,7 +43,33 @@ func (ah *AuthHandler) Signup(ctx *gin.Context) {
 		})
 		return
 	}
-	ah.log.Info("signup handler")
+
+	// check if user already exists
+	_, err := ah.auth.FindUserByEmail(signupRequest.Email)
+	if err == nil {
+		ctx.JSON(http.StatusConflict, gin.H{
+			"error": "user already exists",
+		})
+		return
+	}
+
+
+	// create user
+	user := models.User{
+		Email:    signupRequest.Email,
+		Password: signupRequest.Password,
+		Name:     signupRequest.Name,
+		Role:     "user",
+	}
+
+	if err := ah.auth.CreateUser(&user); err != nil {
+		ah.log.Error("failed to create user", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
 	ctx.JSON(200, gin.H{
 		"message": "signup",
 	})

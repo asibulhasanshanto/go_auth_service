@@ -15,9 +15,9 @@ import (
 func MockConfig() *config.Config {
 	return &config.Config{
 		App: config.AppConfig{
-			AccessTokenSecret:    []byte("access_secret"),
+			AccessTokenSecret:    "access_secret",
 			AccessTokenDuration:  1, // 1 hour
-			RefreshTokenSecret:   []byte("refresh_secret"),
+			RefreshTokenSecret:   "refresh_secret",
 			RefreshTokenDuration: 24 * 7, // 1 week
 		},
 	}
@@ -45,7 +45,7 @@ func TestGenerateToken(t *testing.T) {
 	// Validate the access token
 	accessToken := tokens[0]
 	parsedAccessToken, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		return MockConfig().App.AccessTokenSecret, nil
+		return []byte(MockConfig().App.AccessTokenSecret), nil
 	})
 	assert.NoError(t, err, "Access token should be valid")
 	assert.True(t, parsedAccessToken.Valid, "Access token should be valid")
@@ -53,7 +53,7 @@ func TestGenerateToken(t *testing.T) {
 	// Validate the refresh token
 	refreshToken := tokens[1]
 	parsedRefreshToken, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
-		return MockConfig().App.RefreshTokenSecret, nil
+		return []byte(MockConfig().App.RefreshTokenSecret), nil
 	})
 	assert.NoError(t, err, "Refresh token should be valid")
 	assert.True(t, parsedRefreshToken.Valid, "Refresh token should be valid")
