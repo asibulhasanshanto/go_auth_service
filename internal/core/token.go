@@ -99,3 +99,11 @@ func (t *Token) DeleteRefreshToken(userId int) error {
 	}
 	return nil
 }
+
+func (t *Token) UpdateRefreshToken(token string, userId int) error {
+	if err := t.tokenStore.UpdateRefreshToken(token, userId); err != nil {
+		t.log.Error("failed to update refresh token", zap.Error(err))
+		return err
+	}
+	return nil
+}

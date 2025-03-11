@@ -121,11 +121,39 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 	}
 
 	// find user by email
-	_, err := ah.auth.FindUserByEmail(loginRequest.Email)
+	user, err := ah.auth.FindUserByEmail(loginRequest.Email)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"error": "user not found",
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "email or password is incorrect",
 		})
 		return
 	}
+
+	// check password
+	if err := ah.auth.VerifyPassword(user.Password, loginRequest.Password); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "email or password is incorrect",
+		})
+		return
+	}
+
+	// generate tokens
+	tokens, err := ah.token.GenerateToken(map[string]interface{}{
+		"user_id": user.ID,
+		"email":   user.Email,
+	})
+
+	// update refresh token
+	if err := ah.token.UpdateRefreshToken(tokens[1], user.ID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"access_token":  tokens[0],
+		"refresh_token": tokens[1],
+	})
+
 }
