@@ -24,7 +24,7 @@ func NewAuthHandler(log *zap.Logger, auth *core.Auth, token *core.Token) *AuthHa
 
 func (ah *AuthHandler) Signup(ctx *gin.Context) {
 	// read email and password from request body
-	var signupRequest models.UserCreateRequest
+	var signupRequest models.SignUpRequest
 	if err := json.NewDecoder(ctx.Request.Body).Decode(&signupRequest); err != nil {
 		ah.log.Error("failed to decode request body", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -84,6 +84,14 @@ func (ah *AuthHandler) Signup(ctx *gin.Context) {
 		return
 	}
 
+	// save refresh token
+	if err := ah.token.SaveRefreshToken(tokens[1], user.ID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"access_token":  tokens[0],
 		"refresh_token": tokens[1],
@@ -91,8 +99,33 @@ func (ah *AuthHandler) Signup(ctx *gin.Context) {
 }
 
 func (ah *AuthHandler) Login(ctx *gin.Context) {
-	ah.log.Info("login handler")
-	ctx.JSON(200, gin.H{
-		"message": "login",
-	})
+	var loginRequest models.LoginRequest
+	if err := json.NewDecoder(ctx.Request.Body).Decode(&loginRequest); err != nil {
+		ah.log.Error("failed to decode request body", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	// vlidate request
+	validate := validator.New()
+	if err := validate.Struct(loginRequest); err != nil {
+		errors := err.(validator.ValidationErrors)
+		errorMessages := utils.PrepareValidationErrors(errors, loginRequest)
+		ah.log.Info("validation error ", zap.Any("errorMessages", errorMessages))
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": errorMessages,
+		})
+		return
+	}
+
+	// find user by email
+	_, err := ah.auth.FindUserByEmail(loginRequest.Email)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "user not found",
+		})
+		return
+	}
 }

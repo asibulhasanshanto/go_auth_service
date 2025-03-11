@@ -4,22 +4,26 @@ import (
 	"time"
 
 	"github.com/asibulhasanshanto/go_api/internal/config"
+	"github.com/asibulhasanshanto/go_api/internal/store"
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 )
 
 type Token struct {
-	cfg *config.Config
-	log *zap.Logger
+	cfg        *config.Config
+	log        *zap.Logger
+	tokenStore *store.TokenStore
 }
 
 func NewToken(
 	cfg *config.Config,
 	log *zap.Logger,
+	tokenStore *store.TokenStore,
 ) *Token {
 	return &Token{
-		cfg: cfg,
-		log: log,
+		cfg:        cfg,
+		log:        log,
+		tokenStore: tokenStore,
 	}
 }
 
@@ -78,4 +82,20 @@ func (t *Token) ValidateToken(tokenString string, tokenType string) (map[string]
 	}
 
 	return claims["data"].(map[string]interface{}), nil
+}
+
+func (t *Token) SaveRefreshToken(token string, userId int) error {
+	if err := t.tokenStore.StoreRefreshToken(token, userId); err != nil {
+		t.log.Error("failed to store refresh token", zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (t *Token) DeleteRefreshToken(userId int) error {
+	if err := t.tokenStore.DeleteRefreshToken(userId); err != nil {
+		t.log.Error("failed to delete refresh token", zap.Error(err))
+		return err
+	}
+	return nil
 }

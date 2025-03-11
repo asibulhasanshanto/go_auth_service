@@ -15,16 +15,21 @@ type User struct {
 }
 
 type Token struct {
-	ID        int       `gorm:"column:id;primaryKey;autoIncrement"`
-	UserID    int       `gorm:"column:user_id;not null"`
-	Token     string    `gorm:"column:token;not null"`
-	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
-	DeletedAt time.Time `gorm:"column:deleted_at;index"`
+	ID        int        `gorm:"column:id;primaryKey;autoIncrement"`
+	UserID    int        `gorm:"column:user_id;not null"`
+	Token     string     `gorm:"column:token;not null"`
+	CreatedAt *time.Time `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt *time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	DeletedAt *time.Time `gorm:"column:deleted_at;index"`
 }
 
-type UserCreateRequest struct {
+type SignUpRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6"`
 	Name     string `json:"name" validate:"required,min=3,max=100"`
+}
+
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
 }

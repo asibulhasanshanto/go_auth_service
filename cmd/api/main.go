@@ -33,6 +33,7 @@ func main() {
 
 			// stores
 			store.NewUserStore,
+			store.NewTokenStore,
 
 			GinHttpServer,
 			api.SetupRoutes,
