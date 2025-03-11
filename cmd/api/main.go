@@ -29,6 +29,7 @@ func main() {
 
 			// cores
 			core.NewAuth,
+			core.NewToken,
 
 			// stores
 			store.NewUserStore,

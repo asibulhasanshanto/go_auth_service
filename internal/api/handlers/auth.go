@@ -13,12 +13,13 @@ import (
 )
 
 type AuthHandler struct {
-	log  *zap.Logger
-	auth *core.Auth
+	log   *zap.Logger
+	auth  *core.Auth
+	token *core.Token
 }
 
-func NewAuthHandler(log *zap.Logger, auth *core.Auth) *AuthHandler {
-	return &AuthHandler{log: log, auth: auth}
+func NewAuthHandler(log *zap.Logger, auth *core.Auth, token *core.Token) *AuthHandler {
+	return &AuthHandler{log: log, auth: auth, token: token}
 }
 
 func (ah *AuthHandler) Signup(ctx *gin.Context) {
@@ -53,7 +54,6 @@ func (ah *AuthHandler) Signup(ctx *gin.Context) {
 		return
 	}
 
-
 	// create user
 	user := models.User{
 		Email:    signupRequest.Email,
@@ -70,8 +70,23 @@ func (ah *AuthHandler) Signup(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, gin.H{
-		"message": "signup",
+	// generate and send tokens
+	tokens, err := ah.token.GenerateToken(map[string]interface{}{
+		"user_id": user.ID,
+		"email":   user.Email,
+	})
+
+	if err != nil {
+		ah.log.Error("failed to generate token", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"access_token":  tokens[0],
+		"refresh_token": tokens[1],
 	})
 }
 
