@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/asibulhasanshanto/go_api/internal/config"
 	"github.com/asibulhasanshanto/go_api/internal/core"
 	"github.com/asibulhasanshanto/go_api/internal/models"
 	"github.com/asibulhasanshanto/go_api/pkg/utils"
@@ -16,10 +17,11 @@ type AuthHandler struct {
 	log   *zap.Logger
 	auth  *core.Auth
 	token *core.Token
+	cfg   *config.Config
 }
 
-func NewAuthHandler(log *zap.Logger, auth *core.Auth, token *core.Token) *AuthHandler {
-	return &AuthHandler{log: log, auth: auth, token: token}
+func NewAuthHandler(log *zap.Logger, auth *core.Auth, token *core.Token, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{log: log, auth: auth, token: token, cfg: cfg}
 }
 
 func (ah *AuthHandler) Signup(ctx *gin.Context) {
@@ -92,6 +94,10 @@ func (ah *AuthHandler) Signup(ctx *gin.Context) {
 		return
 	}
 
+	// Set tokens in cookies
+	ctx.SetCookie("access_token", tokens[0], ah.cfg.App.AccessTokenDuration, "/", "", false, true)
+	ctx.SetCookie("refresh_token", tokens[1], ah.cfg.App.RefreshTokenDuration, "/", "", false, true)
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"access_token":  tokens[0],
 		"refresh_token": tokens[1],
@@ -151,9 +157,89 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
+	// Set tokens in cookies
+	ctx.SetCookie("access_token", tokens[0], ah.cfg.App.AccessTokenDuration, "/", "", false, true)
+	ctx.SetCookie("refresh_token", tokens[1], ah.cfg.App.RefreshTokenDuration, "/", "", false, true)
+
+	// Return tokens in JSON response
 	ctx.JSON(http.StatusOK, gin.H{
 		"access_token":  tokens[0],
 		"refresh_token": tokens[1],
 	})
 
+}
+
+func (ah *AuthHandler) RefreshAccessToken(ctx *gin.Context) {
+	// get the refresh token from cookies
+	refreshToken, err := ctx.Cookie("refresh_token")
+	if err != nil {
+		ah.log.Error("failed to get refresh token from cookies", zap.Error(err))
+	}
+
+	// look for req headers if cookie is not set
+	if refreshToken == "" {
+		refreshToken = ctx.GetHeader("Authorization")
+	}
+
+	if refreshToken == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "refresh token is required",
+		})
+		return
+	}
+
+	// validate refresh token
+	claims, err := ah.token.ValidateToken(refreshToken, "refresh")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid refresh token",
+		})
+		return
+	}
+
+	// get user id from claims
+	userId := int(claims["user_id"].(float64))
+
+	// get the user from the database
+	user, err := ah.auth.FindUserByID(uint(userId))
+	if err != nil {
+		ah.log.Error("failed to find user by id", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "user not found",
+		})
+		return
+	}
+
+	// generate new access token
+	tokens, err := ah.token.GenerateToken(map[string]interface{}{
+		"user_id": user.ID,
+		"email":   user.Email,
+	})
+
+	if err != nil {
+		ah.log.Error("failed to generate token", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	// update refresh token
+	if err := ah.token.UpdateRefreshToken(tokens[1], user.ID); err != nil {
+		ah.log.Error("failed to update refresh token", zap.Error(err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	// Set tokens in cookies
+	ctx.SetCookie("access_token", tokens[0], ah.cfg.App.AccessTokenDuration, "/", "", false, true)
+	ctx.SetCookie("refresh_token", tokens[1], ah.cfg.App.RefreshTokenDuration, "/", "", false, true)
+
+	// Return tokens in JSON response
+	ctx.JSON(http.StatusOK, gin.H{
+		"access_token":  tokens[0],
+		"refresh_token": tokens[1],
+	})
 }

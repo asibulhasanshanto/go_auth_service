@@ -22,7 +22,14 @@ func (a *Auth) FindUserByEmail(email string) (models.User, error) {
 		return models.User{}, err
 	}
 	return *user, nil
+}
 
+func (a *Auth) FindUserByID(id uint) (models.User, error) {
+	user, err := a.userStore.GetUserByID(id)
+	if err != nil {
+		return models.User{}, err
+	}
+	return *user, nil
 }
 
 func (a *Auth) CreateUser(user *models.User) error {
