@@ -5,7 +5,7 @@ import "time"
 type User struct {
 	ID                int        `gorm:"column:id;primaryKey;autoIncrement"`
 	Email             string     `gorm:"column:email;unique;not null"`
-	Password          string     `gorm:"column:password;not null"`
+	Password          string     `gorm:"column:password;not null" json:"-"`
 	Name              string     `gorm:"column:name;not null"`
 	Role              string     `gorm:"column:role;not null"`
 	CreatedAt         *time.Time `gorm:"column:created_at;autoCreateTime"`

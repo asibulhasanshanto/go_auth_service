@@ -243,3 +243,97 @@ func (ah *AuthHandler) RefreshAccessToken(ctx *gin.Context) {
 		"refresh_token": tokens[1],
 	})
 }
+
+func (ah *AuthHandler) Logout(ctx *gin.Context) {
+	// get the access token from cookies
+	accessToken, err := ctx.Cookie("access_token")
+	if err != nil {
+		ah.log.Error("failed to get access token from cookies", zap.Error(err))
+	}
+
+	// look for req headers if cookie is not set
+	if accessToken == "" {
+		accessToken = ctx.GetHeader("Authorization")
+	}
+
+	if accessToken == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "access token is required",
+		})
+		return
+	}
+
+	// validate access token
+	claims, err := ah.token.ValidateToken(accessToken, "access")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid refresh token",
+		})
+		return
+	}
+
+	// get user id from claims
+	userId := int(claims["user_id"].(float64))
+
+	// delete refresh token
+	if err := ah.token.DeleteRefreshToken(userId); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "internal server error",
+		})
+		return
+	}
+
+	// delete cookies
+	ctx.SetCookie("access_token", "", -1, "/", "", false, true)
+	ctx.SetCookie("refresh_token", "", -1, "/", "", false, true)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "logged out successfully",
+	})
+}
+
+func (ah *AuthHandler) Me(ctx *gin.Context) {
+	// get the access token from cookies
+	accessToken, err := ctx.Cookie("access_token")
+	if err != nil {
+		ah.log.Error("failed to get access token from cookies", zap.Error(err))
+	}
+
+	// look for req headers if cookie is not set
+	if accessToken == "" {
+		accessToken = ctx.GetHeader("Authorization")
+	}
+
+	if accessToken == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "access token is required",
+		})
+		return
+	}
+
+	// validate access token
+	claims, err := ah.token.ValidateToken(accessToken, "access")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid refresh token",
+		})
+		return
+	}
+
+	// get user id from claims
+	userId := int(claims["user_id"].(float64))
+
+	// get the user from the database
+	user, err := ah.auth.FindUserByID(uint(userId))
+	if err != nil {
+		ah.log.Error("failed to find user by id", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "user not found",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"user": user,
+	})
+}

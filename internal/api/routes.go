@@ -16,6 +16,8 @@ func SetupRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, log *zap.Logg
 			auth.POST("/signup", authHandler.Signup)
 			auth.POST("/login", authHandler.Login)
 			auth.GET("/refresh-access-token", authHandler.RefreshAccessToken)
+			auth.POST("/logout", authHandler.Logout)
+			auth.GET("/me", authHandler.Me)
 		}
 
 	}
