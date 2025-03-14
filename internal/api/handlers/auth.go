@@ -171,34 +171,14 @@ func (ah *AuthHandler) Login(ctx *gin.Context) {
 
 func (ah *AuthHandler) RefreshAccessToken(ctx *gin.Context) {
 	// get the refresh token from cookies
-	refreshToken, err := ctx.Cookie("refresh_token")
+	userId, err := ah.auth.GetUserIdFromContext(ctx, "refresh")
 	if err != nil {
-		ah.log.Error("failed to get refresh token from cookies", zap.Error(err))
-	}
-
-	// look for req headers if cookie is not set
-	if refreshToken == "" {
-		refreshToken = ctx.GetHeader("Authorization")
-	}
-
-	if refreshToken == "" {
+		ah.log.Error("failed to get user id from context", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "refresh token is required",
+			"error": "Token not found or invalid",
 		})
 		return
 	}
-
-	// validate refresh token
-	claims, err := ah.token.ValidateToken(refreshToken, "refresh")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid refresh token",
-		})
-		return
-	}
-
-	// get user id from claims
-	userId := int(claims["user_id"].(float64))
 
 	// get the user from the database
 	user, err := ah.auth.FindUserByID(uint(userId))
@@ -245,35 +225,15 @@ func (ah *AuthHandler) RefreshAccessToken(ctx *gin.Context) {
 }
 
 func (ah *AuthHandler) Logout(ctx *gin.Context) {
-	// get the access token from cookies
-	accessToken, err := ctx.Cookie("access_token")
+
+	userId, err := ah.auth.GetUserIdFromContext(ctx, "access")
 	if err != nil {
-		ah.log.Error("failed to get access token from cookies", zap.Error(err))
-	}
-
-	// look for req headers if cookie is not set
-	if accessToken == "" {
-		accessToken = ctx.GetHeader("Authorization")
-	}
-
-	if accessToken == "" {
+		ah.log.Error("failed to get user id from context", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "access token is required",
+			"error": "Token not found or invalid",
 		})
 		return
 	}
-
-	// validate access token
-	claims, err := ah.token.ValidateToken(accessToken, "access")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid refresh token",
-		})
-		return
-	}
-
-	// get user id from claims
-	userId := int(claims["user_id"].(float64))
 
 	// delete refresh token
 	if err := ah.token.DeleteRefreshToken(userId); err != nil {
@@ -293,35 +253,14 @@ func (ah *AuthHandler) Logout(ctx *gin.Context) {
 }
 
 func (ah *AuthHandler) Me(ctx *gin.Context) {
-	// get the access token from cookies
-	accessToken, err := ctx.Cookie("access_token")
+	userId, err := ah.auth.GetUserIdFromContext(ctx, "access")
 	if err != nil {
-		ah.log.Error("failed to get access token from cookies", zap.Error(err))
-	}
-
-	// look for req headers if cookie is not set
-	if accessToken == "" {
-		accessToken = ctx.GetHeader("Authorization")
-	}
-
-	if accessToken == "" {
+		ah.log.Error("failed to get user id from context", zap.Error(err))
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "access token is required",
+			"error": "Token not found or invalid",
 		})
 		return
 	}
-
-	// validate access token
-	claims, err := ah.token.ValidateToken(accessToken, "access")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid refresh token",
-		})
-		return
-	}
-
-	// get user id from claims
-	userId := int(claims["user_id"].(float64))
 
 	// get the user from the database
 	user, err := ah.auth.FindUserByID(uint(userId))
