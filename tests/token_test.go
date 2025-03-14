@@ -6,6 +6,7 @@ import (
 
 	"github.com/asibulhasanshanto/go_api/internal/config"
 	"github.com/asibulhasanshanto/go_api/internal/core"
+	"github.com/asibulhasanshanto/go_api/internal/store"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -22,13 +23,15 @@ func MockConfig() *config.Config {
 		},
 	}
 }
-
 func TestGenerateToken(t *testing.T) {
 	// Initialize logger
 	logger, _ := zap.NewDevelopment()
 
-	// Create a new Token instance with mock config and logger
-	token := core.NewToken(MockConfig(), logger)
+	// Create a mock token store
+	mockTokenStore := &store.TokenStore{}
+
+	// Create a new Token instance with mock config, logger and token store
+	token := core.NewToken(MockConfig(), logger, mockTokenStore)
 
 	// Define a payload for the token
 	payload := map[string]interface{}{
