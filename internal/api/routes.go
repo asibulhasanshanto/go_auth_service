@@ -7,9 +7,13 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine, authHandler *handlers.AuthHandler, log *zap.Logger) *gin.RouterGroup {
-	root := r.Group("/api")
+	root := r.Group("/")
+	root.GET("healthz", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+	api := r.Group("/api")
 
-	v1 := root.Group("/v1")
+	v1 := api.Group("/v1")
 	{
 		auth := v1.Group("/auth")
 		{

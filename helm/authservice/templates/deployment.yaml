@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authservice
+  namespace: "{{.Values.authservice.namespace}}"
+spec:
+  replicas: {{.Values.authservice.replicas}}
+  selector:
+    matchLabels:
+      app: authservice
+  template:
+    metadata:
+      labels:
+        app: authservice
+    spec:
+      containers:
+      - name: authservice
+        image: "{{.Values.authservice.imagename}}:{{.Values.authservice.img_tag}}"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: CONSUL_URL
+          value: "{{.Values.authservice.consul_url}}"
+        - name: CONSUL_PATH
+          value: "{{.Values.authservice.consul_path}}"
+        args: ["./authservice"]
+        resources:
+          limits:
+            cpu: "1"
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        ports:
+        - containerPort: {{.Values.authservice.port.container}}
+          name: authservice
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: authservice
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: authservice
+          initialDelaySeconds: 5
+          periodSeconds: 10
