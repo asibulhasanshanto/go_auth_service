@@ -45,11 +45,11 @@ func main() {
 	).Run()
 }
 
-func GinHttpServer(lc fx.Lifecycle, log *zap.Logger) *gin.Engine {
+func GinHttpServer(lc fx.Lifecycle, log *zap.Logger, cfg *config.Config) *gin.Engine {
 	r := gin.Default()
 
 	srv := &http.Server{
-		Addr:    ":" + "8082",
+		Addr:    ":" + cfg.App.Port,
 		Handler: r,
 	}
 
@@ -60,6 +60,7 @@ func GinHttpServer(lc fx.Lifecycle, log *zap.Logger) *gin.Engine {
 					log.Fatal("listen", zap.Error(err))
 				}
 			}()
+			log.Info("Server started", zap.String("port", cfg.App.Port))
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
