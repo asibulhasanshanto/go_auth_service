@@ -16,13 +16,13 @@ spec:
       containers:
       - name: authservice
         image: "{{.Values.authservice.imagename}}:{{.Values.authservice.img_tag}}"
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         env:
         - name: CONSUL_URL
           value: "{{.Values.authservice.consul_url}}"
         - name: CONSUL_PATH
           value: "{{.Values.authservice.consul_path}}"
-        args: ["./authservice"]
+        args: ["./api"]
         resources:
           limits:
             cpu: "1"

@@ -1,7 +1,7 @@
 authservice:
   namespace: "default"
   replicaCount: 1
-  consul_url: "http://consul:8585"
+  consul_url: "http://docker.for.mac.localhost:8585"
   consul_path: "go/api"
   imagename: "authservice"
   img_tag: "v1.0.0"
