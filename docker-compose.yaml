@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: basic_api_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: basic_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  consul:
+    image: hashicorp/consul
+    container_name: consul
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    volumes:
+      - consul-data:/consul/data
+    ports:
+      - "8585:8500"
+    command: agent -server -bootstrap -ui -client=0.0.0.0
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth_api
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+      - consul
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=auth_service
+      - CONSUL_URL=consul:8500
+      - CONSUL_PATH=go/api
+
+volumes:
+  postgres:
+  consul-data:

@@ -1,16 +1,16 @@
 app:
-  port: "8080"
+  port: "80"
   accessTokenSecret: "your-access-token-secret-key"
   refreshTokenSecret: "your-refresh-token-secret-key"
   accessTokenDuration: 3600 # in seconds
   refreshTokenDuration: 604800 # in seconds (7 days)
 
 postgres:
-  host: "localhost"
+  host: "postgres"
   port: "5432"
   user: "postgres"
-  password: "postgres"
-  db: "mydatabase"
+  password: "password"
+  db: "auth_service"
   maxIdleConns: 10
   maxOpenConns: 100
   connMaxLifetime: 3600 # in seconds

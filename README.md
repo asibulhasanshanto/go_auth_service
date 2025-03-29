@@ -1,23 +1,21 @@
-## Project Structure and Implementation Guide
+# Go Auth Service
+This is a simple auth service written in Go. It uses JWT for authentication. It also uses a MySQL database to store the users.
 
-Here's a brief explanation of each component:
-
-1. `cmd/`: Contains the main application entry points.
-   - `api/main.go`: The main entry point for your API.
-2. `internal/`: Houses internal application code.
-   - `api/`: API-specific code.
-     - `handlers/`: Request handlers.
-     - `middleware/`: Custom middleware.
-     - `routes.go`: Route definitions.
-   - `config/`: Configuration management.
-   - `conn/`: Connection to databases, redis, etc.
-   - `core/`: Core business logic.
-   - `events/`: Publishers for events.
-   - `models/`: Data models and database interactions.
-   - `services/`: External services.
-3. `pkg/`: Shareable packages that could potentially be used by other projects.
-   - `utils/`: Utility functions.
-4. `tests/`: Unit and integration tests.
-5. `go.mod` and `go.sum`: Go module files for dependency management.
-6. `.gitignore`: Specifies intentionally untracked files to ignore.
-7. `README.md`: Project documentation.
+## How to run
+### 1. Clone the repository
+   ```bash
+   git clone https://github.com/asibulhasanshanto/go_auth_service.git
+   ```
+### 2. Build and run the service
+   -  Run the following command at first
+      ```bash
+      docker compose up -d
+      ```
+   -  Copy the `/internal/config/demo_api.yaml` file content
+   - Go to `http://localhost:8585` and create a new file named `go/api` in the consul and paste the content there.
+   - Open any database client and create a new database named `auth_service`
+   - copy the content from the file `/internal/store/demo_db.sql` file and run it in the database to create the tables.
+   - restart the docker containers along with the network
+       ```bash
+       docker compose down && docker compose up -d 
+       ```
