@@ -1,6 +1,6 @@
 # Go Auth Service
 
-This is a simple auth service written in Go. It uses JWT for authentication. It also uses a MySQL database to store the users.
+This is a simple auth service written in Go. It uses JWT for authentication. It also uses a Postgres database to store the users.
 
 ## How to run
 
